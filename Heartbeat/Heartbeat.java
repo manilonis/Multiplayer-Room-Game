@@ -2,7 +2,7 @@
  * Michael E Anilonis
  * Apr 26, 2018
  */
-package com.groupe.roomgame.networking.Heartbeat;
+package com.groupe.roomgame.networking;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -30,6 +30,16 @@ public class Heartbeat implements Runnable {
 		ips = ip;
 		isLeader = leader;
 	}
+	
+	public Heartbeat(String ip, boolean leader) {
+		ips = new ArrayList<InetAddress>();
+		try {
+			ips.add(InetAddress.getByName(ip));
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		isLeader = leader;
+	}
 
 	public void run() {
 		if (!isLeader) {
@@ -37,14 +47,14 @@ public class Heartbeat implements Runnable {
 			try {
 				socket = new DatagramSocket(port);
 				DatagramPacket packet;
-				socket.setSoTimeout(3000);
+				socket.setSoTimeout(100);
 
 				int timeouts = 0;
 				while (!Thread.interrupted()) {
 					packet = new DatagramPacket(makeHeartBeatPacket(), 1);
 					try {
 						socket.receive(packet);
-						System.out.println("Packet REceived");
+						//System.out.println("Packet REceived");
 						if (packet.getData()[0] != 100)
 							throw new Error();
 					} catch (SocketTimeoutException se) {
@@ -67,11 +77,11 @@ public class Heartbeat implements Runnable {
 					for (InetAddress ia : ips) {
 						packet = new DatagramPacket(makeHeartBeatPacket(), 1, ia, port);
 						socket.send(packet);
-						System.out.println("Packet Sent");
+						//System.out.println("Packet Sent");
 					}
 					
 					try {
-						Thread.sleep(1500);
+						Thread.sleep(50);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
